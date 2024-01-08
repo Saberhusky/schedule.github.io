@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spa Therapist Schedule</title>
+    <style>
+        body {
+            background-color: grey;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #availability {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spa Therapist Schedule</h1>
+    <button onclick="calculateAvailability()">Calculate Availability</button>
+    <button onclick="addAppointment()">Add Appointment</button>
+    <button onclick="removeAppointment()">Remove Appointment</button>
+    <h2>Available at:</h2>
+    <div id="availability"></div>
+
+    <script>
+        // Define working hours
+        var start = 9; // 9 AM
+        var end = 17; // 5 PM
+        var duration = 1; // Each appointment lasts 1 hour
+
+        // Define appointments (you can replace these with actual data)
+        var appointments = [10, 13, 15]; // 10 AM, 1 PM, 3 PM
+
+        function calculateAvailability() {
+            // Calculate availability
+            var availability = document.getElementById('availability');
+            availability.innerHTML = '';
+            for (var current = start; current + duration <= end; current++) {
+                if (appointments.indexOf(current) === -1) {
+                    availability.innerHTML += current + ':00<br>';
+                }
+            }
+        }
+
+        function addAppointment() {
+            var time = prompt("Enter the time of the new appointment (hour only, 24-hour format):");
+            time = parseInt(time);
+            if (time >= start && time + duration <= end) {
+                appointments.push(time);
+                alert("Appointment added at " + time + ":00");
+            } else {
+                alert("Invalid time. Please enter a time between " + start + ":00 and " + (end - 1) + ":00.");
+            }
+        }
+
+        function removeAppointment() {
+            var time = prompt("Enter the time of the appointment to remove (hour only, 24-hour format):");
+            time = parseInt(time);
+            var index = appointments.indexOf(time);
+            if (index !== -1) {
+                appointments.splice(index, 1);
+                alert("Appointment removed at " + time + ":00");
+            } else {
+                alert("No appointment at that time.");
+            }
+        }
+    </script>
+</body>
+</html>
