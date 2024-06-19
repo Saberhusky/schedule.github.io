@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spa Therapist Schedule</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+			top: 30px;
+        }
+        #availability {
+            text-align: center;
+        }
+        #therapistControls {
+            position: absolute;
+            top: 20px;
+            left: 0;
+        }
+        #myTable {
+            position: absolute;
+			top: 0px;
+            right: 90px;
+        }
+        table, th, td {
+            border: 3px solid white;
+            border-collapse: collapse;
+        }
+		#newTable {
+            position: absolute;
+			top: 80px;
+            right: 90px;
+        }
+        table, th, td {
+            border: 3px solid white;
+            border-collapse: collapse;
+        }
+        #editNoteButton {
+            position: absolute;
+            top: 80px;
+            right: 0px; /* adjust this value as needed */
+			height: 4vh;
+			width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Spa Therapist Schedule</h1>
+    <div id="therapistControls">
+        <label for="therapist">Choose a therapist:</label>
+        <select id="therapist"></select>
+        <button onclick="addTherapist()">Add Therapist</button>
+        <button onclick="removeTherapist()">Remove Therapist</button>
+        <button onclick="addAppointment()">Add Appointment</button>
+        <button onclick="removeAppointment()">Remove Appointment</button>
+    </div>
+    <button onclick="calculateAvailability()">Calculate Availability</button>
+    <h2>Available at:</h2>
+    <div id="availability"></div>
+
+    <table id="myTable">
+    <tr>
+        <td>TVS</td>
+        <td id="1"></td>
+    </tr>
+    <tr>
+        <td>10pm</td>
+        <td id="2"></td>
+    </tr>
+    <tr>
+        <td>11pm</td>
+        <td id="3"></td>
+    </tr>
+</table>
+
+	<table id="newTable">
+    <tr>
+        <td id="newNote"></td>
+    </tr>
+</table>
+    <button style="position: absolute; top: 0; right: 0; height: 7.6vh; width: 80px;" onclick="editTableData()">Edit Table Data</button>
+
+    <textarea id="noteInput" style="display:none;"></textarea>
+    <button id="editNoteButton" onclick="showNoteInput('note1')">Edit Note</button>
+
+    <script>
+        // Define working hours
+        var start = 9; // 9 AM
+        var end = 23; // 11 PM
+
+        // Load appointments from localStorage
+        var appointments = JSON.parse(localStorage.getItem('appointments')) || {};
+
+        function addTherapist() {
+            var therapistName = prompt("Enter the name of the new therapist:");
+            if (therapistName && !appointments[therapistName]) {
+                appointments[therapistName] = [];
+                saveAppointments();
+                updateTherapistDropdown();
+            } else {
+                alert("Invalid name or therapist already exists.");
+            }
+        }
+
+        function removeTherapist() {
+            var therapistName = document.getElementById('therapist').value;
+            delete appointments[therapistName];
+            saveAppointments();
+            updateTherapistDropdown();
+        }
+
+        function addAppointment() {
+            var therapistName = document.getElementById('therapist').value;
+            var appointmentTime = prompt("Enter the time of the new appointment:");
+            if (appointmentTime) {
+                appointments[therapistName].push(appointmentTime);
+                saveAppointments();
+            } else {
+                alert("Invalid time.");
+            }
+        }
+
+        function removeAppointment() {
+            var therapistName = document.getElementById('therapist').value;
+            var appointmentTime = prompt("Enter the time of the appointment to remove:");
+            if (appointmentTime) {
+                var index = appointments[therapistName].indexOf(appointmentTime);
+                if (index > -1) {
+                    appointments[therapistName].splice(index, 1);
+                    saveAppointments();
+                } else {
+                    alert("Appointment not found.");
+                }
+            } else {
+                alert("Invalid time.");
+            }
+        }
+
+        function calculateAvailability() {
+            // Get selected therapist
+            var therapistName = document.getElementById('therapist').value;
+
+            // Calculate availability
+            var availability = document.getElementById('availability');
+            availability.innerHTML = '';
+            for (var current = start; current + 1 <= end; current++) {
+                if (!appointments[therapistName].some(a => a >= current && a < current + 1)) {
+                    availability.innerHTML += current + ':00<br>';
+                }
+            }
+        }
+
+        function editTableData() {
+            var rowId = prompt("Enter the id of the row to edit (1, 2, 3):");
+            if (rowId) {
+                var rowData = prompt("Enter the new data for the row:");
+                var cell = document.getElementById(rowId);
+                cell.innerText = rowData;
+                // Save the updated data and attributes to localStorage
+                var cellData = {
+                    text: rowData,
+                    rowspan: cell.getAttribute('rowspan'),
+                    colspan: cell.getAttribute('colspan')
+                };
+                localStorage.setItem(rowId, JSON.stringify(cellData));
+            } else {
+                alert("Invalid row id.");
+            }
+        }
+
+        function loadTableData() {
+            for (var i = 1; i <= 3; i++) {
+                var cellData = JSON.parse(localStorage.getItem(i.toString()));
+                if (cellData) {
+                    var cell = document.getElementById(i.toString());
+                    cell.innerText = cellData.text;
+                    cell.setAttribute('rowspan', cellData.rowspan);
+                    cell.setAttribute('colspan', cellData.colspan);
+                }
+            }
+        }
+
+        // Initialize dropdown and load table data
+        updateTherapistDropdown();
+        loadTableData();
+
+        function showNoteInput(noteId) {
+    var noteInput = document.getElementById('noteInput');
+    noteInput.style.display = 'block'; // Show the textarea
+    noteInput.value = document.getElementById('newNote').innerText; // Pre-fill with current note
+    noteInput.onblur = function() {
+        editNote('newNote', noteInput.value); // When the textarea loses focus, update the note
+        noteInput.style.display = 'none'; // Hide the textarea again
+    };
+}
+
+		function editNote(noteId, noteData) {
+    var noteCell = document.getElementById('newNote');
+    noteCell.innerText = noteData;
+    noteCell.style.whiteSpace = 'pre-wrap';
+}
+
+        function saveAppointments() {
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+        }
+
+        function updateTherapistDropdown() {
+            var dropdown = document.getElementById('therapist');
+            dropdown.innerHTML = '';
+            for (var therapistName in appointments) {
+                var option = document.createElement('option');
+                option.text = therapistName;
+                option.value = therapistName;
+                dropdown.add(option);
+            }
+        }
+
+        // Initialize dropdown
+        updateTherapistDropdown();
+    </script>
+</body>
+</html>
